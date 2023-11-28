@@ -130,7 +130,7 @@ contract UserRepository {
         );
     }
 
-    function listUser() public view returns (User[] memory) {
+    function listUsers() public view returns (User[] memory) {
         User[] memory UserList = new User[](nextId);
 
         for (uint i = 0; i < nextId; i++) {
