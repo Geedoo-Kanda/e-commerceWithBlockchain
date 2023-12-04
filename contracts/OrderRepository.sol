@@ -27,7 +27,6 @@ contract OrderRepository {
         string orderDate,
         bool delivered
     );
-=
 
     function placeOrder(
         address _buyer,

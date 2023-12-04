@@ -1,7 +1,7 @@
 import Web3 from 'web3';
-import ProductRepositoryContract from './build/contracts/ProductRepository.json';
+import ProductRepositoryContract from './build/contracts/ProduitRepository.json';
 
-const initWeb3 = async () => {
+const initProduitWeb3 = async () => {
     if (window.ethereum) {
         const web3Instance = new Web3(window.ethereum);
         try {
@@ -17,7 +17,7 @@ const initWeb3 = async () => {
     }
 };
 
-const initContract = async (web3) => {
+const initProduitContract = async (web3) => {
     if (web3) {
         const networkId = await web3.eth.net.getId();
         const deployedNetwork = ProductRepositoryContract.networks[networkId];
@@ -28,7 +28,7 @@ const initContract = async (web3) => {
     }
 };
 
-const initAccounts = async (web3) => {
+const initProduitAccounts = async (web3) => {
     if (web3) {
         return web3.eth.getAccounts();
     }
@@ -59,9 +59,9 @@ const listAllProducts = async (contract) => {
 };
 
 export {
-    initWeb3,
-    initContract,
-    initAccounts,
+    initProduitWeb3,
+    initProduitContract,
+    initProduitAccounts,
     createNewProduct,
     getProductById,
     listAllProducts,

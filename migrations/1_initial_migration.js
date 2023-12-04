@@ -1,11 +1,11 @@
 const UserRepository = artifacts.require("UserRepository");
-const ProduitRepository = artifacts.require("ProduitRepository");
+const ProductRepository = artifacts.require("ProductRepository");
 const OrderRepository = artifacts.require("OrderRepository");
 const DeliveryRepository = artifacts.require("DeliveryRepository");
 
 module.exports = function(deployer) {
    deployer.deploy(UserRepository);
-   deployer.deploy(ProduitRepository);
+   deployer.deploy(ProductRepository);
    deployer.deploy(OrderRepository);
    deployer.deploy(DeliveryRepository);
 };
