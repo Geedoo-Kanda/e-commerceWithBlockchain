@@ -1,29 +1,70 @@
 "use client"
 
-import Image from 'next/image'
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { initUserWeb3, initUserContract, initUserAccounts, listAllUsers } from './funcs/UserRepository';
+import { initProduitWeb3, initProduitContract, initProduitAccounts, listAllProducts } from './funcs/ProduitRepository';
+import { useCart } from './cartContext';
+import { toast } from 'react-toastify';
 
 export default function Home() {
+  const { addToCart } = useCart();
   const [load, setLoad] = useState(false)
   const Connexion = async () => {
-      setLoad(true)
-      if (typeof window != "undefined" && typeof window.ethereum != "undefined") {
-          try {
-              const comptes = await window.ethereum.request({
-                  method: 'eth_requestAccounts',
-              });
-              setLoad(false)
-              window.location.href = "/dashbord"
-          } catch (err) {
-              console.error(err);
-              setLoad(false)
-          }
-      } else {
-          console.log('zoba')
-          setLoad(false)
+    setLoad(true)
+    if (typeof window != "undefined" && typeof window.ethereum != "undefined") {
+      try {
+        const comptes = await window.ethereum.request({
+          method: 'eth_requestAccounts',
+        });
+        const web3UserInstance = await initUserWeb3();
+        const contractUserInstance = await initUserContract(web3UserInstance);
+        const tabAccounts = await listAllUsers(contractUserInstance);
 
+        const User = tabAccounts.find((x: { compte: any; }) => x.compte.toLowerCase() == comptes[0].toLowerCase());
+
+        setLoad(false)
+
+        if (User?.role === "admin") {
+          window.location.href = "/dashbord"
+        }
+        else {
+          window.location.href = "/commandes"
+        }
+      } catch (err) {
+        console.error(err);
+        setLoad(false)
       }
+    } else {
+      console.log('zoba')
+      setLoad(false)
+
+    }
   }
+  const [contractProduit, setContractProduit] = useState<any | null>(null);
+  const [accountsProduit, setAccountsProduit] = useState<string[]>([]);
+  const [produits, setProduits] = useState<string[]>([]);
+
+
+  useEffect(() => {
+    const initBlockchain = async () => {
+      const web3ProduitInstance = await initProduitWeb3();
+      const contractProduitInstance = await initProduitContract(web3ProduitInstance);
+      const accountsListProduit = await initProduitAccounts(web3ProduitInstance);
+
+      setContractProduit(contractProduitInstance);
+      setAccountsProduit(accountsListProduit);
+
+      setProduits(await listAllProducts(contractProduitInstance));
+    };
+    initBlockchain();
+  }, []);
+
+  const handleAddToCart = (produit: { id: any; name: any; category: any; price: any; image:any; }) => {
+    addToCart({ id: produit.id, name: produit.name, category: produit.category, price: produit.price, photo:produit.image })
+    toast.success(`"${produit.name}" a été ajouté au panier.`, {
+      position: 'bottom-right',
+    });
+  };
   return (
     <main className="min-h-screen">
       <div className="relative h-[90vh] bg-cover bg-center w-full bg-fixed max-h-[600px]" style={{ backgroundImage: "url('/home.jpg');" }}>
@@ -49,11 +90,11 @@ export default function Home() {
           </div>
         </div>
         {
-      load == true?
-      <div className='bg-black/60 flex items-center justify-center z-50 fixed w-screen h-full'>
-      <iframe src="https://lottie.host/?file=2a8ea8aa-744d-4fb6-8c9c-bd2f4dde6e39/NeMYisbn2s.json"></iframe>
-    </div>:''
-     }
+          load == true ?
+            <div className='bg-black/60 flex items-center justify-center z-50 fixed w-screen h-full'>
+              <iframe src="https://lottie.host/?file=2a8ea8aa-744d-4fb6-8c9c-bd2f4dde6e39/NeMYisbn2s.json"></iframe>
+            </div> : ''
+        }
       </div>
       <section className='my-5 mt-12 container px-8 md:px-0 md:mx-auto'>
         <div className='grid lg:grid-cols-3 gap-5'>
@@ -82,215 +123,29 @@ export default function Home() {
           </div>
         </div>
         <div className='grid gap-4 grid-cols-2 mt-12 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'>
-          <div className='shadow-xl rounded-md'>
-            <div className='overflow-hidden max-h-[200px]'>
-              <button className='text-white p-1.5 absolute z-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 ml-2 mt-2'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12.5 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8H17.67a2 2 0 0 1 1.977 2.304l-.263 1.708M16 19h6m-3-3v6" /><path d="M9 11V6a3 3 0 0 1 6 0v5" /></g></svg>
-              </button>
-              <img src="/produits/1.jpg" alt="" className='w-full h-auto rounded-t-md min-h-[200px] transition-transform transform hover:scale-110' />
+          {
+            produits.slice(1).map((produit: any, index) => (  
+              <div className='shadow-xl rounded-md' key={index}>
+                <div className='overflow-hidden max-h-[200px]'>
+                  <button className='text-white p-1.5 absolute z-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 ml-2 mt-2' onClick={() => handleAddToCart(produit)}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12.5 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8H17.67a2 2 0 0 1 1.977 2.304l-.263 1.708M16 19h6m-3-3v6" /><path d="M9 11V6a3 3 0 0 1 6 0v5" /></g></svg>
+                  </button>
+                  <img src={produit.image} alt="" className='w-full h-auto rounded-t-md min-h-[200px] transition-transform transform hover:scale-110' />
 
-            </div>
-            <div className='px-4 pt-2 pb-4 justify-between grid grid-cols-5'>
-              <div className='col-span-4'>
-                <h3 className='text-lg font-medium text-gray-800'>Basket  ozbonb onz </h3>
-                <h4 className='text-gray-500 -mt-1 text-xs'>Categorie</h4>
+                </div>
+                <div className='px-auto pt-2 pb-4 justify-between flex px-4'>
+                  <div className='col-span-4'>
+                    <h3 className='text-md font-medium text-gray-700 uppercase'>{produit.name} </h3>
+                    <h4 className='text-gray-500 -mt-1 text-[12px]'>{produit.category}</h4>
+                  </div>
+                  <div className='col-sapn-1 flex items-center'>
+                    <h2 className='text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'>{produit.price.toString()}</h2>
+                    <small className='text-xs text-gray-500'>$</small>
+                  </div>
+                </div>
               </div>
-              <div className='col-sapn-1 flex'>
-                <h2 className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'>45</h2>
-                <small className='text-xs text-gray-500'>$</small>
-              </div>
-            </div>
-          </div>
-          <div className='shadow-xl rounded-md'>
-            <div className='overflow-hidden max-h-[200px]'>
-              <button className='text-white p-1.5 absolute z-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 ml-2 mt-2'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12.5 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8H17.67a2 2 0 0 1 1.977 2.304l-.263 1.708M16 19h6m-3-3v6" /><path d="M9 11V6a3 3 0 0 1 6 0v5" /></g></svg>
-              </button>
-              <img src="/produits/2.jpg" alt="" className='w-full h-auto rounded-t-md min-h-[200px] transition-transform transform hover:scale-110' />
-
-            </div>
-            <div className='px-4 pt-2 pb-4 justify-between grid grid-cols-5'>
-              <div className='col-span-4'>
-                <h3 className='text-lg font-medium text-gray-800'>Basket  ozbonb onz </h3>
-                <h4 className='text-gray-500 -mt-1 text-xs'>Categorie</h4>
-              </div>
-              <div className='col-sapn-1 flex'>
-                <h2 className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'>45</h2>
-                <small className='text-xs text-gray-500'>$</small>
-              </div>
-            </div>
-          </div>
-          <div className='shadow-xl rounded-md'>
-            <div className='overflow-hidden max-h-[200px]'>
-              <button className='text-white p-1.5 absolute z-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 ml-2 mt-2'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12.5 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8H17.67a2 2 0 0 1 1.977 2.304l-.263 1.708M16 19h6m-3-3v6" /><path d="M9 11V6a3 3 0 0 1 6 0v5" /></g></svg>
-              </button>
-              <img src="/produits/3.jpg" alt="" className='w-full h-auto rounded-t-md min-h-[200px] transition-transform transform hover:scale-110' />
-
-            </div>
-            <div className='px-4 pt-2 pb-4 justify-between grid grid-cols-5'>
-              <div className='col-span-4'>
-                <h3 className='text-lg font-medium text-gray-800'>Basket  ozbonb onz </h3>
-                <h4 className='text-gray-500 -mt-1 text-xs'>Categorie</h4>
-              </div>
-              <div className='col-sapn-1 flex'>
-                <h2 className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'>45</h2>
-                <small className='text-xs text-gray-500'>$</small>
-              </div>
-            </div>
-          </div>
-          <div className='shadow-xl rounded-md'>
-            <div className='overflow-hidden max-h-[200px]'>
-              <button className='text-white p-1.5 absolute z-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 ml-2 mt-2'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12.5 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8H17.67a2 2 0 0 1 1.977 2.304l-.263 1.708M16 19h6m-3-3v6" /><path d="M9 11V6a3 3 0 0 1 6 0v5" /></g></svg>
-              </button>
-              <img src="/produits/4.jpg" alt="" className='w-full h-auto rounded-t-md min-h-[200px] transition-transform transform hover:scale-110' />
-
-            </div>
-            <div className='px-4 pt-2 pb-4 justify-between grid grid-cols-5'>
-              <div className='col-span-4'>
-                <h3 className='text-lg font-medium text-gray-800'>Basket  ozbonb onz </h3>
-                <h4 className='text-gray-500 -mt-1 text-xs'>Categorie</h4>
-              </div>
-              <div className='col-sapn-1 flex'>
-                <h2 className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'>45</h2>
-                <small className='text-xs text-gray-500'>$</small>
-              </div>
-            </div>
-          </div>
-          <div className='shadow-xl rounded-md'>
-            <div className='overflow-hidden max-h-[200px]'>
-              <button className='text-white p-1.5 absolute z-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 ml-2 mt-2'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12.5 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8H17.67a2 2 0 0 1 1.977 2.304l-.263 1.708M16 19h6m-3-3v6" /><path d="M9 11V6a3 3 0 0 1 6 0v5" /></g></svg>
-              </button>
-              <img src="/produits/5.jpg" alt="" className='w-full h-auto rounded-t-md min-h-[200px] transition-transform transform hover:scale-110' />
-
-            </div>
-            <div className='px-4 pt-2 pb-4 justify-between grid grid-cols-5'>
-              <div className='col-span-4'>
-                <h3 className='text-lg font-medium text-gray-800'>Basket  ozbonb onz </h3>
-                <h4 className='text-gray-500 -mt-1 text-xs'>Categorie</h4>
-              </div>
-              <div className='col-sapn-1 flex'>
-                <h2 className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'>45</h2>
-                <small className='text-xs text-gray-500'>$</small>
-              </div>
-            </div>
-          </div>
-          <div className='shadow-xl rounded-md'>
-            <div className='overflow-hidden max-h-[200px]'>
-              <button className='text-white p-1.5 absolute z-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 ml-2 mt-2'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12.5 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8H17.67a2 2 0 0 1 1.977 2.304l-.263 1.708M16 19h6m-3-3v6" /><path d="M9 11V6a3 3 0 0 1 6 0v5" /></g></svg>
-              </button>
-              <img src="/produits/6.jpg" alt="" className='w-full h-auto rounded-t-md min-h-[200px] transition-transform transform hover:scale-110' />
-
-            </div>
-            <div className='px-4 pt-2 pb-4 justify-between grid grid-cols-5'>
-              <div className='col-span-4'>
-                <h3 className='text-lg font-medium text-gray-800'>Basket  ozbonb onz </h3>
-                <h4 className='text-gray-500 -mt-1 text-xs'>Categorie</h4>
-              </div>
-              <div className='col-sapn-1 flex'>
-                <h2 className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'>45</h2>
-                <small className='text-xs text-gray-500'>$</small>
-              </div>
-            </div>
-          </div>
-          <div className='shadow-xl rounded-md'>
-            <div className='overflow-hidden max-h-[200px]'>
-              <button className='text-white p-1.5 absolute z-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 ml-2 mt-2'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12.5 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8H17.67a2 2 0 0 1 1.977 2.304l-.263 1.708M16 19h6m-3-3v6" /><path d="M9 11V6a3 3 0 0 1 6 0v5" /></g></svg>
-              </button>
-              <img src="/produits/7.jpg" alt="" className='w-full h-auto rounded-t-md min-h-[200px] transition-transform transform hover:scale-110' />
-
-            </div>
-            <div className='px-4 pt-2 pb-4 justify-between grid grid-cols-5'>
-              <div className='col-span-4'>
-                <h3 className='text-lg font-medium text-gray-800'>Basket  ozbonb onz </h3>
-                <h4 className='text-gray-500 -mt-1 text-xs'>Categorie</h4>
-              </div>
-              <div className='col-sapn-1 flex'>
-                <h2 className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'>45</h2>
-                <small className='text-xs text-gray-500'>$</small>
-              </div>
-            </div>
-          </div>
-          <div className='shadow-xl rounded-md'>
-            <div className='overflow-hidden max-h-[200px]'>
-              <button className='text-white p-1.5 absolute z-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 ml-2 mt-2'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12.5 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8H17.67a2 2 0 0 1 1.977 2.304l-.263 1.708M16 19h6m-3-3v6" /><path d="M9 11V6a3 3 0 0 1 6 0v5" /></g></svg>
-              </button>
-              <img src="/produits/8.jpg" alt="" className='w-full h-auto rounded-t-md min-h-[200px] transition-transform transform hover:scale-110' />
-
-            </div>
-            <div className='px-4 pt-2 pb-4 justify-between grid grid-cols-5'>
-              <div className='col-span-4'>
-                <h3 className='text-lg font-medium text-gray-800'>Basket  ozbonb onz </h3>
-                <h4 className='text-gray-500 -mt-1 text-xs'>Categorie</h4>
-              </div>
-              <div className='col-sapn-1 flex'>
-                <h2 className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'>45</h2>
-                <small className='text-xs text-gray-500'>$</small>
-              </div>
-            </div>
-          </div>
-          <div className='shadow-xl rounded-md'>
-            <div className='overflow-hidden max-h-[200px]'>
-              <button className='text-white p-1.5 absolute z-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 ml-2 mt-2'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12.5 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8H17.67a2 2 0 0 1 1.977 2.304l-.263 1.708M16 19h6m-3-3v6" /><path d="M9 11V6a3 3 0 0 1 6 0v5" /></g></svg>
-              </button>
-              <img src="/produits/9.jpg" alt="" className='w-full h-auto rounded-t-md min-h-[200px] transition-transform transform hover:scale-110' />
-
-            </div>
-            <div className='px-4 pt-2 pb-4 justify-between grid grid-cols-5'>
-              <div className='col-span-4'>
-                <h3 className='text-lg font-medium text-gray-800'>Basket  ozbonb onz </h3>
-                <h4 className='text-gray-500 -mt-1 text-xs'>Categorie</h4>
-              </div>
-              <div className='col-sapn-1 flex'>
-                <h2 className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'>45</h2>
-                <small className='text-xs text-gray-500'>$</small>
-              </div>
-            </div>
-          </div>
-          <div className='shadow-xl rounded-md'>
-            <div className='overflow-hidden max-h-[200px]'>
-              <button className='text-white p-1.5 absolute z-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 ml-2 mt-2'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12.5 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8H17.67a2 2 0 0 1 1.977 2.304l-.263 1.708M16 19h6m-3-3v6" /><path d="M9 11V6a3 3 0 0 1 6 0v5" /></g></svg>
-              </button>
-              <img src="/produits/10.jpg" alt="" className='w-full h-auto rounded-t-md min-h-[200px] transition-transform transform hover:scale-110' />
-
-            </div>
-            <div className='px-4 pt-2 pb-4 justify-between grid grid-cols-5'>
-              <div className='col-span-4'>
-                <h3 className='text-lg font-medium text-gray-800'>Basket  ozbonb onz </h3>
-                <h4 className='text-gray-500 -mt-1 text-xs'>Categorie</h4>
-              </div>
-              <div className='col-sapn-1 flex'>
-                <h2 className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'>45</h2>
-                <small className='text-xs text-gray-500'>$</small>
-              </div>
-            </div>
-          </div>
-          <div className='shadow-xl rounded-md'>
-            <div className='overflow-hidden max-h-[200px]'>
-              <button className='text-white p-1.5 absolute z-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 ml-2 mt-2'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12.5 21H8.574a3 3 0 0 1-2.965-2.544l-1.255-8.152A2 2 0 0 1 6.331 8H17.67a2 2 0 0 1 1.977 2.304l-.263 1.708M16 19h6m-3-3v6" /><path d="M9 11V6a3 3 0 0 1 6 0v5" /></g></svg>
-              </button>
-              <img src="/produits/11.jpg" alt="" className='w-full h-auto rounded-t-md min-h-[200px] transition-transform transform hover:scale-110' />
-
-            </div>
-            <div className='px-4 pt-2 pb-4 justify-between grid grid-cols-5'>
-              <div className='col-span-4'>
-                <h3 className='text-lg font-medium text-gray-800'>Basket  ozbonb onz </h3>
-                <h4 className='text-gray-500 -mt-1 text-xs'>Categorie</h4>
-              </div>
-              <div className='col-sapn-1 flex'>
-                <h2 className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'>45</h2>
-                <small className='text-xs text-gray-500'>$</small>
-              </div>
-            </div>
-          </div>
+            ))
+          }
 
         </div>
       </section>

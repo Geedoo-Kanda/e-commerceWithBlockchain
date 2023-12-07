@@ -1,21 +1,40 @@
-"use client" 
+"use client"
 
 import Modal from '@/app/components/Modal';
 import Image from 'next/image'
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { initProduitWeb3, initProduitContract, initProduitAccounts, listAllProducts } from '../../funcs/ProduitRepository';
 import AddProduit from './partial/AddProduit';
 
 export default function AdminProduits() {
 
     const [search, setSearch] = useState("");
     const [modal, setmodal] = useState<any>(false);
+    const [contractProduit, setContractProduit] = useState<any | null>(null);
+    const [accountsProduit, setAccountsProduit] = useState<string[]>([]);
+    const [produits, setProduits] = useState<string[]>([]);
+
+
+    useEffect(() => {
+        const initBlockchain = async () => {
+            const web3ProduitInstance = await initProduitWeb3();
+            const contractProduitInstance = await initProduitContract(web3ProduitInstance);
+            const accountsListProduit = await initProduitAccounts(web3ProduitInstance);
+
+            setContractProduit(contractProduitInstance);
+            setAccountsProduit(accountsListProduit);
+
+            setProduits(await listAllProducts(contractProduitInstance));
+        };
+        initBlockchain();
+    }, []);
 
     const Add = () => {
         setmodal(true);
     };
     const closeModal = async () => {
         setmodal(false);
-        // setLettreData(await fetchLettreDataList(contractLettre));
+        setProduits(await listAllProducts(contractProduit));
     };
 
 
@@ -27,7 +46,7 @@ export default function AdminProduits() {
                         <span onClick={Add} className="p-3 cursor-pointer rounded-md bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 border-blue-500 border text-blue-500 text-sm">
                             <svg className="inline-flex mr-2" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="currentColor" d="M11 13H6q-.425 0-.713-.288T5 12q0-.425.288-.713T6 11h5V6q0-.425.288-.713T12 5q.425 0 .713.288T13 6v5h5q.425 0 .713.288T19 12q0 .425-.288.713T18 13h-5v5q0 .425-.288.713T12 19q-.425 0-.713-.288T11 18v-5Z" /></svg>
                             <span className='bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'>
-                            Ajouter un produit
+                                Ajouter un produit
                             </span>
                         </span>
                         <Modal show={modal} onClose={closeModal}>
@@ -36,7 +55,7 @@ export default function AdminProduits() {
                         </Modal>
                     </div>
                     <div className="max-w-xs w-full">
-                        <input value={search} onChange={(e) => setSearch(e.target.value)} type="search" id="search-dropdown" className="bg-white border-2 md:mt-0 mt-8 text-sm text-gray-600 rounded-full w-full py-4 px-3" placeholder="Recherche..." />
+                        <input value={search} onChange={(e) => setSearch(e.target.value)} type="search" id="search-dropdown" className="bg-white border md:mt-0 mt-8 text-sm text-gray-600 rounded-full w-full py-2 px-3" placeholder="Recherche..." />
                     </div>
                 </div>
 
@@ -71,71 +90,25 @@ export default function AdminProduits() {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                <tr>
-                                    <td className="py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap text-center">
-                                        1
-                                    </td>
-                                    <td className="py-2 px-3 flex justify-center">
-                                        <img src="/home1.png" alt="" className='w-auto h-24' />
-                                    </td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center uppercase font-semibold">Nike air 978</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">900 $</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">Chaussure</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 max-w-[300px] text-center">Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex quod et nulla dolorum voluptatem vero. Nam quod aliquam dolores ipsum nostrum vel. Soluta ut nobis, itaque rem cum placeat tenetur.</td>
+                                {
+                                    produits.slice(1).map((produit:any, index) => (
+                                        <tr key={index}>
+                                            <td className="py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap text-center">
+                                                {index + 1}
+                                            </td>
+                                            <td className="py-2 px-3 flex justify-center">
+                                                <img src={produit.image} alt="" className='w-auto h-24' />
+                                            </td>
+                                            <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center uppercase font-semibold">{produit.name}</td>
+                                            <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">{produit.price.toString()} $</td>
+                                            <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">{produit.category}</td>
+                                            <td className="py-2 px-3 text-sm text-gray-700 max-w-[300px] text-center">{produit.description}</td>
 
-                                </tr>
-                                <tr>
-                                    <td className="py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap text-center">
-                                        1
-                                    </td>
-                                    <td className="py-2 px-3 flex justify-center">
-                                        <img src="/produits/5.jpg" alt="" className='w-auto h-24' />
-                                    </td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center uppercase font-semibold">Nike air 978</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">900 $</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">Chaussure</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 max-w-[300px] text-center">Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex quod et nulla dolorum voluptatem vero. Nam quod aliquam dolores ipsum nostrum vel. Soluta ut nobis, itaque rem cum placeat tenetur.</td>
+                                        </tr>
+                                    ))
+                                }
 
-                                </tr>
-                                <tr>
-                                    <td className="py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap text-center">
-                                        1
-                                    </td>
-                                    <td className="py-2 px-3 flex justify-center">
-                                        <img src="/produits/1.jpg" alt="" className='w-auto h-24' />
-                                    </td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center uppercase font-semibold">Nike air 978</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">900 $</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">Chaussure</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 max-w-[300px] text-center">Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex quod et nulla dolorum voluptatem vero. Nam quod aliquam dolores ipsum nostrum vel. Soluta ut nobis, itaque rem cum placeat tenetur.</td>
 
-                                </tr>
-                                <tr>
-                                    <td className="py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap text-center">
-                                        1
-                                    </td>
-                                    <td className="py-2 px-3 flex justify-center">
-                                        <img src="/produits/10.jpg" alt="" className='w-auto h-24' />
-                                    </td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center uppercase font-semibold">Nike air 978</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">900 $</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">Chaussure</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 max-w-[300px] text-center">Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex quod et nulla dolorum voluptatem vero. Nam quod aliquam dolores ipsum nostrum vel. Soluta ut nobis, itaque rem cum placeat tenetur.</td>
-
-                                </tr>
-                                <tr>
-                                    <td className="py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap text-center">
-                                        1
-                                    </td>
-                                    <td className="py-2 px-3 flex justify-center">
-                                        <img src="/produits/7.jpg" alt="" className='w-auto h-24' />
-                                    </td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center uppercase font-semibold">Nike air 978</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">900 $</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">Chaussure</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 max-w-[300px] text-center">Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex quod et nulla dolorum voluptatem vero. Nam quod aliquam dolores ipsum nostrum vel. Soluta ut nobis, itaque rem cum placeat tenetur.</td>
-
-                                </tr>
                             </tbody>
                         </table>
                     </div>

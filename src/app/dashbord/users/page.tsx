@@ -1,6 +1,6 @@
 import Image from 'next/image'
 
-export default function AdminProfil() {
+export default function AdminUsers() {
     return (
         <main className="min-h-screen mt-5">
             <div className="overflow-x-auto mt-3">

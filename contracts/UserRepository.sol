@@ -37,15 +37,15 @@ contract UserRepository {
 
     constructor() public {
         createUser(
-            "John",
-            "Doe",
-            "John",
-            "john@example.com",
-            "+243972062655",
-            "123 Main Street",
-            "default.jpg",
+            "Kanda",
+            "Geedoo",
+            "Heritier",
+            "geedookanda06@gmail.com",
+            "+243 972 062 655",
+            "DRC, kinshasa",
+            "/default.jpg",
             "admin",
-            "Some bio information",
+            "Creator of this plateforme",
             "123456789"
         );
     }

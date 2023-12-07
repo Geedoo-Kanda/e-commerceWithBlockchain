@@ -5,8 +5,9 @@ pragma experimental ABIEncoderV2;
 contract OrderRepository {
     struct Order {
         uint id;
-        address buyer;
-        string productReference;
+        address buyer; // Mettre 'payable' pour accepter les paiements
+        string orderReference;
+        string products;
         uint quantity;
         uint price;
         uint balance;
@@ -20,7 +21,8 @@ contract OrderRepository {
     event OrderPlaced(
         uint indexed id,
         address buyer,
-        string productReference,
+        string orderReference,
+        string products,
         uint quantity,
         uint price,
         uint balance,
@@ -29,18 +31,21 @@ contract OrderRepository {
     );
 
     function placeOrder(
-        address _buyer,
-        string memory _productReference,
+        string memory _orderReference,
+        string memory _products,
         uint _quantity,
         uint _price,
         uint _balance,
         string memory _orderDate,
         bool _delivered
-    ) public {
+    ) public payable {
+        require(msg.value == _balance);
+
         Order memory newOrder = Order(
             nextId,
-            _buyer,
-            _productReference,
+            msg.sender,
+            _orderReference,
+            _products,
             _quantity,
             _price,
             _balance,
@@ -51,8 +56,9 @@ contract OrderRepository {
 
         emit OrderPlaced(
             nextId,
-            _buyer,
-            _productReference,
+            msg.sender,
+            _orderReference,
+            _products,
             _quantity,
             _price,
             _balance,

@@ -1,7 +1,7 @@
 import Web3 from 'web3';
-import UserRepositoryContract from './build/contracts/UserRepository.json';
+import UserRepositoryContract from '../../../build/contracts/UserRepository.json';
 
-const initWeb3 = async () => {
+const initUserWeb3 = async () => {
     if (window.ethereum) {
         const web3Instance = new Web3(window.ethereum);
         try {
@@ -17,7 +17,7 @@ const initWeb3 = async () => {
     }
 };
 
-const initContract = async (web3) => {
+const initUserContract = async (web3) => {
     if (web3) {
         const networkId = await web3.eth.net.getId();
         const deployedNetwork = UserRepositoryContract.networks[networkId];
@@ -28,7 +28,7 @@ const initContract = async (web3) => {
     }
 };
 
-const initAccounts = async (web3) => {
+const initUserAccounts = async (web3) => {
     if (web3) {
         return web3.eth.getAccounts();
     }
@@ -70,9 +70,9 @@ const compareUserPasswords = async (contract, userId, inputPassword) => {
 };
 
 export {
-    initWeb3,
-    initContract,
-    initAccounts,
+    initUserWeb3,
+    initUserContract,
+    initUserAccounts,
     createNewUser,
     getUserById,
     listAllUsers,

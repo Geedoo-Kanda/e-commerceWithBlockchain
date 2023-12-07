@@ -4,10 +4,13 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-
+import { initUserWeb3, initUserContract, initUserAccounts, listAllUsers } from './funcs/UserRepository';
+import { CartProvider } from './cartContext'
 const inter = Inter({ subsets: ['latin'] })
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // export const metadata: Metadata = {
 //   title: 'Create Next App',
@@ -34,8 +37,22 @@ export default function RootLayout({
         const comptes = await window.ethereum.request({
           method: 'eth_requestAccounts',
         });
+
+        const web3UserInstance = await initUserWeb3();
+        const contractUserInstance = await initUserContract(web3UserInstance);
+        const tabAccounts = await listAllUsers(contractUserInstance);
+
+        const User = tabAccounts.find((x: { compte: string; }) => x.compte === comptes[0]);
+
         setLoad(false)
-        window.location.href = "/dashbord"
+
+        if (User?.role === "admin") {
+          window.location.href = "/dashbord"
+        }
+        else {
+          window.location.href = "/commandes"
+        }
+
       } catch (err) {
         console.error(err);
         setLoad(false)
@@ -46,6 +63,31 @@ export default function RootLayout({
 
     }
   }
+
+  const [userProfile, setUserProfile] = useState<any>();
+  useEffect(() => {
+    const initBlockchain = async () => {
+
+      const accounts = await window.ethereum.request({
+        method: 'eth_requestAccounts',
+      });
+      if (accounts.length > 0) {
+
+        const web3UserInstance = await initUserWeb3();
+        const contractUserInstance = await initUserContract(web3UserInstance);
+        const accountsListUser = await initUserAccounts(web3UserInstance);
+
+        const tabAccounts = await listAllUsers(contractUserInstance);
+        const User = tabAccounts.find((x: { compte: string; }) => x.compte === accountsListUser[0]);
+        setUserProfile(User);
+
+      } else {
+        window.location.href = "/"
+      }
+
+    };
+    initBlockchain();
+  }, []);
 
   const links = [
     {
@@ -69,42 +111,57 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <nav className='fixed z-50 mt-4 ml-[5%] text-sm w-screen'>
-          <div className='w-[90%] bg-white rounded-md shadow-md py-2 px-5 grid grid-cols-12 items-center'>
-            <div className="text-xl font-extrabold col-span-10 md:col-span-4">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
-                RDCryptoMarket
-              </span>
-            </div>
-            <button className='col-span-2 md:hidden flex items-center justify-center'>
-              <svg xmlns="http://www.w3.org/2000/svg" className='text-gray-600' width="28" height="28" viewBox="0 0 24 24"><path fill="currentColor" d="M15.53 12.53a.75.75 0 0 0 0-1.06l-2.5-2.5a.75.75 0 1 0-1.06 1.06l1.22 1.22H6a.75.75 0 0 0 0 1.5h7.19l-1.22 1.22a.75.75 0 1 0 1.06 1.06l2.5-2.5Z" /><path fill="currentColor" fill-rule="evenodd" d="M13.945 1.25h1.11c1.367 0 2.47 0 3.337.117c.9.12 1.658.38 2.26.981c.602.602.86 1.36.982 2.26c.116.867.116 1.97.116 3.337v8.11c0 1.367 0 2.47-.116 3.337c-.122.9-.38 1.658-.982 2.26c-.602.602-1.36.86-2.26.982c-.867.116-1.97.116-3.337.116h-1.11c-1.367 0-2.47 0-3.337-.116c-.9-.122-1.658-.38-2.26-.982c-.4-.4-.648-.869-.805-1.402c-.951-.001-1.744-.012-2.386-.098c-.764-.103-1.426-.325-1.955-.854c-.529-.529-.751-1.19-.854-1.955c-.098-.73-.098-1.656-.098-2.79V9.447c0-1.133 0-2.058.098-2.79c.103-.763.325-1.425.854-1.954c.529-.529 1.19-.751 1.955-.854c.642-.086 1.435-.097 2.386-.098c.157-.533.406-1.002.805-1.402c.602-.602 1.36-.86 2.26-.981c.867-.117 1.97-.117 3.337-.117ZM7.25 16.055c0 1.05 0 1.943.053 2.694c-.835-.003-1.455-.018-1.946-.084c-.598-.08-.89-.224-1.094-.428c-.204-.203-.348-.496-.428-1.094c-.083-.619-.085-1.443-.085-2.643v-5c0-1.2.002-2.024.085-2.643c.08-.598.224-.89.428-1.094c.203-.204.496-.348 1.094-.428c.491-.066 1.111-.08 1.946-.084C7.25 6 7.25 6.895 7.25 7.945V8a.75.75 0 1 0 1.5 0c0-1.435.002-2.437.103-3.192c.099-.734.28-1.122.556-1.399c.277-.277.665-.457 1.4-.556c.755-.101 1.756-.103 3.191-.103h1c1.435 0 2.436.002 3.192.103c.734.099 1.122.28 1.399.556c.277.277.457.665.556 1.4c.101.754.103 1.756.103 3.191v8c0 1.435-.002 2.436-.103 3.192c-.099.734-.28 1.122-.556 1.399c-.277.277-.665.457-1.4.556c-.755.101-1.756.103-3.191.103h-1c-1.435 0-2.437-.002-3.192-.103c-.734-.099-1.122-.28-1.399-.556c-.277-.277-.457-.665-.556-1.4c-.101-.755-.103-1.756-.103-3.191a.75.75 0 0 0-1.5 0v.055Z" clip-rule="evenodd" /></svg>
-            </button>
-            <div className='col-span-12 md:col-span-8 items-center hidden grid-cols-1 gap-3  md:flex justify-end md:space-x-2 text-gray-600 text-sm'>
-              {
-                links.map((link, index)=>(
-                  <Link key={index} href={link.url} className={`${location === link.url? "bg-gradient-to-r text-transparent" : "text-gray-700"} font-normal relative hover:bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text hover:text-transparent`}>{link.name}</Link>
+        <CartProvider>
+          <nav className='fixed z-50 mt-4 ml-[5%] text-sm w-screen'>
+            <div className='w-[90%] bg-white rounded-md shadow-md py-2 px-5 grid grid-cols-12 items-center'>
+              <div className="text-xl font-extrabold col-span-10 md:col-span-4">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
+                  RDCryptoMarket
+                </span>
+              </div>
+              <button className='col-span-2 md:hidden flex items-center justify-center'>
+                <svg xmlns="http://www.w3.org/2000/svg" className='text-gray-600' width="28" height="28" viewBox="0 0 24 24"><path fill="currentColor" d="M15.53 12.53a.75.75 0 0 0 0-1.06l-2.5-2.5a.75.75 0 1 0-1.06 1.06l1.22 1.22H6a.75.75 0 0 0 0 1.5h7.19l-1.22 1.22a.75.75 0 1 0 1.06 1.06l2.5-2.5Z" /><path fill="currentColor" fill-rule="evenodd" d="M13.945 1.25h1.11c1.367 0 2.47 0 3.337.117c.9.12 1.658.38 2.26.981c.602.602.86 1.36.982 2.26c.116.867.116 1.97.116 3.337v8.11c0 1.367 0 2.47-.116 3.337c-.122.9-.38 1.658-.982 2.26c-.602.602-1.36.86-2.26.982c-.867.116-1.97.116-3.337.116h-1.11c-1.367 0-2.47 0-3.337-.116c-.9-.122-1.658-.38-2.26-.982c-.4-.4-.648-.869-.805-1.402c-.951-.001-1.744-.012-2.386-.098c-.764-.103-1.426-.325-1.955-.854c-.529-.529-.751-1.19-.854-1.955c-.098-.73-.098-1.656-.098-2.79V9.447c0-1.133 0-2.058.098-2.79c.103-.763.325-1.425.854-1.954c.529-.529 1.19-.751 1.955-.854c.642-.086 1.435-.097 2.386-.098c.157-.533.406-1.002.805-1.402c.602-.602 1.36-.86 2.26-.981c.867-.117 1.97-.117 3.337-.117ZM7.25 16.055c0 1.05 0 1.943.053 2.694c-.835-.003-1.455-.018-1.946-.084c-.598-.08-.89-.224-1.094-.428c-.204-.203-.348-.496-.428-1.094c-.083-.619-.085-1.443-.085-2.643v-5c0-1.2.002-2.024.085-2.643c.08-.598.224-.89.428-1.094c.203-.204.496-.348 1.094-.428c.491-.066 1.111-.08 1.946-.084C7.25 6 7.25 6.895 7.25 7.945V8a.75.75 0 1 0 1.5 0c0-1.435.002-2.437.103-3.192c.099-.734.28-1.122.556-1.399c.277-.277.665-.457 1.4-.556c.755-.101 1.756-.103 3.191-.103h1c1.435 0 2.436.002 3.192.103c.734.099 1.122.28 1.399.556c.277.277.457.665.556 1.4c.101.754.103 1.756.103 3.191v8c0 1.435-.002 2.436-.103 3.192c-.099.734-.28 1.122-.556 1.399c-.277.277-.665.457-1.4.556c-.755.101-1.756.103-3.191.103h-1c-1.435 0-2.437-.002-3.192-.103c-.734-.099-1.122-.28-1.399-.556c-.277-.277-.457-.665-.556-1.4c-.101-.755-.103-1.756-.103-3.191a.75.75 0 0 0-1.5 0v.055Z" clip-rule="evenodd" /></svg>
+              </button>
+              <div className='col-span-12 md:col-span-8 items-center hidden grid-cols-1 gap-3  md:flex justify-end md:space-x-2 text-gray-600 text-sm'>
+                {
+                  links.map((link, index) => (
+                    <Link key={index} href={link.url} className={`${location === link.url ? "bg-gradient-to-r text-transparent" : "text-gray-700"} font-normal relative hover:bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text hover:text-transparent`}>{link.name}</Link>
+                  ))
+                }
+                <form action="" className='border border-gray-300 rounded-full p-0 m-0'>
+                  <input type="search" placeholder='Recherche...' name="" id="" className='py-2 px-2 rounded-full' />
+                </form>
+                {
+                  userProfile === undefined || userProfile === null ?
+                    <button className='bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-sm px-4 justify-center py-2 text-white rounded-md flex' onClick={Connexion}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className='mr-3' width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M15.53 12.53a.75.75 0 0 0 0-1.06l-2.5-2.5a.75.75 0 1 0-1.06 1.06l1.22 1.22H6a.75.75 0 0 0 0 1.5h7.19l-1.22 1.22a.75.75 0 1 0 1.06 1.06l2.5-2.5Z" /><path fill="currentColor" fill-rule="evenodd" d="M13.945 1.25h1.11c1.367 0 2.47 0 3.337.117c.9.12 1.658.38 2.26.981c.602.602.86 1.36.982 2.26c.116.867.116 1.97.116 3.337v8.11c0 1.367 0 2.47-.116 3.337c-.122.9-.38 1.658-.982 2.26c-.602.602-1.36.86-2.26.982c-.867.116-1.97.116-3.337.116h-1.11c-1.367 0-2.47 0-3.337-.116c-.9-.122-1.658-.38-2.26-.982c-.4-.4-.648-.869-.805-1.402c-.951-.001-1.744-.012-2.386-.098c-.764-.103-1.426-.325-1.955-.854c-.529-.529-.751-1.19-.854-1.955c-.098-.73-.098-1.656-.098-2.79V9.447c0-1.133 0-2.058.098-2.79c.103-.763.325-1.425.854-1.954c.529-.529 1.19-.751 1.955-.854c.642-.086 1.435-.097 2.386-.098c.157-.533.406-1.002.805-1.402c.602-.602 1.36-.86 2.26-.981c.867-.117 1.97-.117 3.337-.117ZM7.25 16.055c0 1.05 0 1.943.053 2.694c-.835-.003-1.455-.018-1.946-.084c-.598-.08-.89-.224-1.094-.428c-.204-.203-.348-.496-.428-1.094c-.083-.619-.085-1.443-.085-2.643v-5c0-1.2.002-2.024.085-2.643c.08-.598.224-.89.428-1.094c.203-.204.496-.348 1.094-.428c.491-.066 1.111-.08 1.946-.084C7.25 6 7.25 6.895 7.25 7.945V8a.75.75 0 1 0 1.5 0c0-1.435.002-2.437.103-3.192c.099-.734.28-1.122.556-1.399c.277-.277.665-.457 1.4-.556c.755-.101 1.756-.103 3.191-.103h1c1.435 0 2.436.002 3.192.103c.734.099 1.122.28 1.399.556c.277.277.457.665.556 1.4c.101.754.103 1.756.103 3.191v8c0 1.435-.002 2.436-.103 3.192c-.099.734-.28 1.122-.556 1.399c-.277.277-.665.457-1.4.556c-.755.101-1.756.103-3.191.103h-1c-1.435 0-2.437-.002-3.192-.103c-.734-.099-1.122-.28-1.399-.556c-.277-.277-.457-.665-.556-1.4c-.101-.755-.103-1.756-.103-3.191a.75.75 0 0 0-1.5 0v.055Z" clip-rule="evenodd" /></svg>
+                      Se connecter</button> :
+                    <Link href={"/profil"} className=' '>
+                      <div className='flex items-center space-x-2'>
+                        <img src={userProfile.photoProfil} alt="" className='h-8 w-8 rounded-full' />
+                        <div className='text-sm text-gray-800 capitalize font-medium'>
+                          {userProfile?.nom} {userProfile?.postnom} {userProfile?.prenom}
+                        </div>
+                      </div>
+                    </Link>
+                }
 
-                ))
-              }
-              <form action="" className='border border-gray-300 rounded-full p-0 m-0'>
-                <input type="search" placeholder='Recherche...' name="" id="" className='py-2 px-2 rounded-full' />
-              </form>
-              <button className='bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-sm px-4 justify-center py-2 text-white rounded-md flex' onClick={Connexion}>
-                <svg xmlns="http://www.w3.org/2000/svg" className='mr-3' width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M15.53 12.53a.75.75 0 0 0 0-1.06l-2.5-2.5a.75.75 0 1 0-1.06 1.06l1.22 1.22H6a.75.75 0 0 0 0 1.5h7.19l-1.22 1.22a.75.75 0 1 0 1.06 1.06l2.5-2.5Z" /><path fill="currentColor" fill-rule="evenodd" d="M13.945 1.25h1.11c1.367 0 2.47 0 3.337.117c.9.12 1.658.38 2.26.981c.602.602.86 1.36.982 2.26c.116.867.116 1.97.116 3.337v8.11c0 1.367 0 2.47-.116 3.337c-.122.9-.38 1.658-.982 2.26c-.602.602-1.36.86-2.26.982c-.867.116-1.97.116-3.337.116h-1.11c-1.367 0-2.47 0-3.337-.116c-.9-.122-1.658-.38-2.26-.982c-.4-.4-.648-.869-.805-1.402c-.951-.001-1.744-.012-2.386-.098c-.764-.103-1.426-.325-1.955-.854c-.529-.529-.751-1.19-.854-1.955c-.098-.73-.098-1.656-.098-2.79V9.447c0-1.133 0-2.058.098-2.79c.103-.763.325-1.425.854-1.954c.529-.529 1.19-.751 1.955-.854c.642-.086 1.435-.097 2.386-.098c.157-.533.406-1.002.805-1.402c.602-.602 1.36-.86 2.26-.981c.867-.117 1.97-.117 3.337-.117ZM7.25 16.055c0 1.05 0 1.943.053 2.694c-.835-.003-1.455-.018-1.946-.084c-.598-.08-.89-.224-1.094-.428c-.204-.203-.348-.496-.428-1.094c-.083-.619-.085-1.443-.085-2.643v-5c0-1.2.002-2.024.085-2.643c.08-.598.224-.89.428-1.094c.203-.204.496-.348 1.094-.428c.491-.066 1.111-.08 1.946-.084C7.25 6 7.25 6.895 7.25 7.945V8a.75.75 0 1 0 1.5 0c0-1.435.002-2.437.103-3.192c.099-.734.28-1.122.556-1.399c.277-.277.665-.457 1.4-.556c.755-.101 1.756-.103 3.191-.103h1c1.435 0 2.436.002 3.192.103c.734.099 1.122.28 1.399.556c.277.277.457.665.556 1.4c.101.754.103 1.756.103 3.191v8c0 1.435-.002 2.436-.103 3.192c-.099.734-.28 1.122-.556 1.399c-.277.277-.665.457-1.4.556c-.755.101-1.756.103-3.191.103h-1c-1.435 0-2.437-.002-3.192-.103c-.734-.099-1.122-.28-1.399-.556c-.277-.277-.457-.665-.556-1.4c-.101-.755-.103-1.756-.103-3.191a.75.75 0 0 0-1.5 0v.055Z" clip-rule="evenodd" /></svg>
-                Se connecter</button>
+              </div>
             </div>
+          </nav>
+          {
+            load == true ?
+              <div className='bg-black/60 flex items-center justify-center z-50 fixed w-screen h-full'>
+                <iframe src="https://lottie.host/?file=2a8ea8aa-744d-4fb6-8c9c-bd2f4dde6e39/NeMYisbn2s.json"></iframe>
+              </div> : ''
+          }
+          <div>
+            {children}
           </div>
-        </nav>
-        {
-          load == true ?
-            <div className='bg-black/60 flex items-center justify-center z-50 fixed w-screen h-full'>
-              <iframe src="https://lottie.host/?file=2a8ea8aa-744d-4fb6-8c9c-bd2f4dde6e39/NeMYisbn2s.json"></iframe>
-            </div> : ''
-        }
-        <div>
-          {children}
-        </div>
+          <ToastContainer position="bottom-right" />
+        </CartProvider>
       </body>
-    </html>
+    </html >
+
   )
 }

@@ -58,7 +58,7 @@ const AddProduit: React.FC = () => {
             description: '',
             category: '',
             image: '',
-            compte: ''
+            compte: accountsProduit[0]
         });
     }
     return (
@@ -88,7 +88,7 @@ const AddProduit: React.FC = () => {
                 <div>
                     <label className='text-sm text-gray-700 font-semibold' htmlFor="image">Lien de l'image</label>
                     <input
-                        type="url"
+                        type="text"
                         name="image"
                         value={formProduit.image}
                         onChange={handleInputChange}

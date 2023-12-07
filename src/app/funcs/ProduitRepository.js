@@ -1,5 +1,5 @@
 import Web3 from 'web3';
-import ProductRepositoryContract from './build/contracts/ProduitRepository.json';
+import ProductRepositoryContract from '../../../build/contracts/ProductRepository.json';
 
 const initProduitWeb3 = async () => {
     if (window.ethereum) {
