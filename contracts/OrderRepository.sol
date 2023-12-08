@@ -2,69 +2,76 @@
 pragma solidity >=0.4.22 <0.9.0;
 pragma experimental ABIEncoderV2;
 
+import "./OrderProductRepository.sol";
+
 contract OrderRepository {
     struct Order {
         uint id;
-        address buyer; // Mettre 'payable' pour accepter les paiements
+        address payable buyer;
         string orderReference;
-        string products;
-        uint quantity;
-        uint price;
-        uint balance;
         string orderDate;
+        uint totalPrice;
         bool delivered;
     }
 
     mapping(uint => Order) public orders;
     uint public nextId = 1;
 
+    OrderProductRepository public orderProductRepository;
+
     event OrderPlaced(
         uint indexed id,
-        address buyer,
+        address payable buyer,
         string orderReference,
-        string products,
-        uint quantity,
-        uint price,
-        uint balance,
         string orderDate,
+        uint totalPrice,
         bool delivered
     );
 
+    constructor(OrderProductRepository _orderProductRepository) public {
+        orderProductRepository = _orderProductRepository;
+    }
+
     function placeOrder(
         string memory _orderReference,
-        string memory _products,
-        uint _quantity,
-        uint _price,
-        uint _balance,
         string memory _orderDate,
-        bool _delivered
+        uint _totalPrice,
+        bool _delivered,
+        uint[] memory _productIds,
+        uint[] memory _quantities,
+        uint[] memory _unitPrices
     ) public payable {
-        require(msg.value == _balance);
+        require(msg.value >= _totalPrice, "Insufficient funds sent");
 
-        Order memory newOrder = Order(
-            nextId,
-            msg.sender,
-            _orderReference,
-            _products,
-            _quantity,
-            _price,
-            _balance,
-            _orderDate,
-            _delivered
-        );
+        Order memory newOrder = Order({
+            id: nextId,
+            buyer: msg.sender,
+            orderReference: _orderReference,
+            orderDate: _orderDate,
+            totalPrice: _totalPrice,
+            delivered: _delivered
+        });
+
         orders[nextId] = newOrder;
 
         emit OrderPlaced(
             nextId,
             msg.sender,
             _orderReference,
-            _products,
-            _quantity,
-            _price,
-            _balance,
             _orderDate,
+            _totalPrice,
             _delivered
         );
+
+        // Ajouter les produits à la commande
+        for (uint i = 0; i < _productIds.length; i++) {
+            orderProductRepository.addOrderProduct(
+                nextId,
+                _productIds[i],
+                _quantities[i],
+                _unitPrices[i]
+            );
+        }
 
         nextId++;
     }
@@ -74,10 +81,10 @@ contract OrderRepository {
     }
 
     function listOrders() public view returns (Order[] memory) {
-        Order[] memory orderList = new Order[](nextId);
+        Order[] memory orderList = new Order[](nextId - 1);
 
-        for (uint i = 0; i < nextId; i++) {
-            orderList[i] = orders[i];
+        for (uint i = 1; i < nextId; i++) {
+            orderList[i - 1] = orders[i];
         }
 
         return orderList;

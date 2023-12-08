@@ -19,6 +19,7 @@ interface CartContextProps {
     addToCart: (product: Product) => void;
     getCart: () => CartItem[];
     getTotal: () => bigint;
+    clearCart: any;
 }
 
 const CartContext = createContext<CartContextProps | undefined>(undefined);
@@ -57,13 +58,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const getTotal = () => {
         return cart.reduce((total, item) => total + BigInt(item.product.price) * BigInt(item.quantity), BigInt(0));
     };
+    const clearCart = () => {
+        setCart([]);
+    };
 
     const contextValue: CartContextProps = {
         cart,
         addToCart,
         getCart,
         getTotal,
+        clearCart, // Add the new function to the context
     };
-
     return <CartContext.Provider value={contextValue}>{children}</CartContext.Provider>;
 };

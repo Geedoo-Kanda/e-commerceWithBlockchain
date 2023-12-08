@@ -18,7 +18,7 @@ contract UserRepository {
         bytes32 passwordHash;
     }
 
-    mapping(uint => User) public user;
+    mapping(uint => User) public users;
     uint public nextId = 1;
 
     event UserCreated(
@@ -45,7 +45,7 @@ contract UserRepository {
             "DRC, kinshasa",
             "/default.jpg",
             "admin",
-            "Creator of this plateforme",
+            "Creator of this platform",
             "123456789"
         );
     }
@@ -78,7 +78,7 @@ contract UserRepository {
             _biographie,
             hashedPassword
         );
-        user[nextId] = newUser;
+        users[nextId] = newUser;
 
         emit UserCreated(
             nextId,
@@ -115,7 +115,7 @@ contract UserRepository {
             string memory
         )
     {
-        User memory selectedUser = user[_id];
+        User memory selectedUser = users[_id];
         return (
             selectedUser.nom,
             selectedUser.postnom,
@@ -134,7 +134,7 @@ contract UserRepository {
         User[] memory UserList = new User[](nextId);
 
         for (uint i = 0; i < nextId; i++) {
-            UserList[i] = user[i];
+            UserList[i] = users[i];
         }
 
         return UserList;
@@ -146,6 +146,6 @@ contract UserRepository {
     ) public view returns (bool) {
         return
             keccak256(abi.encodePacked(_inputPassword)) ==
-            user[_id].passwordHash;
+            users[_id].passwordHash;
     }
 }

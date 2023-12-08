@@ -5,13 +5,16 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useCart } from "../cartContext";
 import { initProduitWeb3, initProduitContract, initProduitAccounts, listAllProducts } from "../funcs/ProduitRepository";
+import { initOrderWeb3, initOrderContract, initOrderAccounts, placeNewOrder } from "../funcs/OrderRepository";
 
 export default function Panier() {
 
-    const { getCart, addToCart, getTotal } = useCart();
+    const { getCart, addToCart, getTotal, clearCart } = useCart();
     const cart = getCart();
     const total = getTotal();
 
+    const [contractOrder, setContractOrder] = useState<any | null>(null);
+    const [accountsOrder, setAccountsOrder] = useState<string[]>([]);
     const [contractProduit, setContractProduit] = useState<any | null>(null);
     const [accountsProduit, setAccountsProduit] = useState<string[]>([]);
     const [produits, setProduits] = useState<string[]>([]);
@@ -25,17 +28,59 @@ export default function Panier() {
             setContractProduit(contractProduitInstance);
             setAccountsProduit(accountsListProduit);
 
+            const web3OrderInstance = await initOrderWeb3();
+            const contractOrderInstance = await initOrderContract(web3OrderInstance);
+            const accountsListOrder = await initOrderAccounts(web3OrderInstance);
+
+            setContractOrder(contractOrderInstance);
+            setAccountsOrder(accountsListOrder);
+
             setProduits(await listAllProducts(contractProduitInstance));
         };
         initBlockchain();
     }, []);
+
+
+    const handleSubmit = async () => {
+
+        const orderReference = generateorderReference();
+
+        const orderDate = new Date().toISOString();
+
+        await placeNewOrder(contractOrder, {
+            orderReference,
+            orderDate,
+            totalPrice: total,
+            delivered: false,
+            productIds: cart.map((item) => item.product.id),
+            quantities: cart.map((item) => item.quantity),
+            unitPrices: cart.map((item) => item.product.price),
+        }, accountsOrder);
+
+        clearCart();
+    };
+
+    // Fonction pour générer une référence de produit alphanumérique
+    const generateorderReference = (): string => {
+        const alphanumericChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        const referenceLength = 20;
+        let reference = '';
+
+        for (let i = 0; i < referenceLength; i++) {
+            const randomIndex = Math.floor(Math.random() * alphanumericChars.length);
+            reference += alphanumericChars.charAt(randomIndex);
+        }
+
+        return reference;
+    };
+
     const handleAddToCart = (produit: { id: any; name: any; category: any; price: any; image: any; }) => {
         addToCart({ id: produit.id, name: produit.name, category: produit.category, price: produit.price, photo: produit.image })
         toast.success(`"${produit.name}" a été ajouté au panier.`, {
             position: 'bottom-right',
         });
     };
-    console.log(cart)
+
     return (
         <main className="min-h-screen pt-20">
 
@@ -88,6 +133,14 @@ export default function Panier() {
                                     {total.toString()} <small className='text-xs ml-1 text-gray-500'>$</small>
                                 </div>
                             </div>
+                            {
+                                cart.length > 0 ?
+                                    <div className='flex justify-between'>
+                                        <button className='text-white bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 font-medium px-5 py-2 text-sm rounded-md mt-3 flex w-full justify-center' onClick={handleSubmit}>Valider le panier</button>
+                                    </div>
+                                    : ""
+                            }
+
                         </div>
                     </div>
                     <div>
@@ -96,7 +149,7 @@ export default function Panier() {
                         </div>
                         <div className='grid gap-4 grid-cols-2 mt-4 sm:grid-cols-3'>
                             {
-                                produits.slice(1, 7).map((produit: any, index) => (
+                                produits?.slice(1, 7).map((produit: any, index) => (
                                     <div className='shadow-xl rounded-md' key={index}>
                                         <div className='overflow-hidden max-h-[200px]'>
                                             <button className='text-white p-1.5 absolute z-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 ml-2 mt-2' onClick={() => handleAddToCart(produit)}>

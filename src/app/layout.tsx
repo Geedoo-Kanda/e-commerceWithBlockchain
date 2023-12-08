@@ -46,10 +46,13 @@ export default function RootLayout({
 
         setLoad(false)
 
-        if (User?.role === "admin") {
-          window.location.href = "/dashbord"
-        }
-        else {
+        if (User) {
+          if (User.role === "admin") {
+            window.location.href = "/dashbord"
+          }else {
+            window.location.href = "/commandes"
+          }
+        }else {
           window.location.href = "/commandes"
         }
 

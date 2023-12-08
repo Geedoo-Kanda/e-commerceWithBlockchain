@@ -45,7 +45,7 @@ export default function Produits() {
                 </div>
                 <div className='grid gap-4 grid-cols-2 mt-12 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'>
                     {
-                        produits.slice(1).map((produit: any, index) => (
+                        produits?.slice(1).map((produit: any, index) => (
                             <div className='shadow-xl rounded-md' key={index}>
                                 <div className='overflow-hidden max-h-[200px]'>
                                     <button className='text-white p-1.5 absolute z-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 ml-2 mt-2' onClick={() => handleAddToCart(produit)}>

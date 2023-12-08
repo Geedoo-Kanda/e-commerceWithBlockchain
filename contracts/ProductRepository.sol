@@ -31,14 +31,14 @@ contract ProductRepository {
         string memory _category,
         string memory _image
     ) public {
-        Product memory newProduct = Product(
-            nextId,
-            _name,
-            _price,
-            _description,
-            _category,
-            _image
-        );
+        Product memory newProduct = Product({
+            id: nextId,
+            name: _name,
+            price: _price,
+            description: _description,
+            category: _category,
+            image: _image
+        });
         products[nextId] = newProduct;
 
         emit ProductCreated(

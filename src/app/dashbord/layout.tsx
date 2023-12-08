@@ -116,7 +116,7 @@ export default function DashbordLayout({
                             <input type="search" name="" id="" className='border border-gray-300 rounded-full py-1 w-64 px-2 tetx-gray-600' placeholder='Recherche...' />
                             <Link href={"/dashbord/profil"} className=' '>
                                 <div className='flex items-center space-x-2'>
-                                    <img src={userProfile.photoProfil} alt="" className='h-8 w-8 rounded-full' />
+                                    <img src={userProfile?.photoProfil} alt="" className='h-8 w-8 rounded-full' />
                                     <div className='text-sm text-gray-800'>
                                         {userProfile?.nom} {userProfile?.postnom} {userProfile?.prenom}
                                     </div>

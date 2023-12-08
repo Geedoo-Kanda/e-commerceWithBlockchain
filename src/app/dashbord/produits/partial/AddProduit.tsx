@@ -3,7 +3,7 @@
 
 // Import des modules nécessaires
 import React, { useEffect, useState } from 'react';
-import { initProduitWeb3, initProduitContract, initProduitAccounts, createNewProduct} from '../../../funcs/ProduitRepository';
+import { initProduitWeb3, initProduitContract, initProduitAccounts, createNewProduct } from '../../../funcs/ProduitRepository';
 
 interface FormProduit {
     name: string;
@@ -124,9 +124,8 @@ const AddProduit: React.FC = () => {
                 </div>
             </div>
             <div className='flex justify-between'>
-                <button className='text-white bg-violet-500 font-medium px-5 py-2 text-sm rounded-md mt-3 flex w-full justify-center' type="submit">Enregistrer</button>
+                <button className='text-white bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 font-medium px-5 py-2 text-sm rounded-md mt-3 flex w-full justify-center' type="submit">Enregistrer</button>
             </div>
-
         </form>
     );
 };

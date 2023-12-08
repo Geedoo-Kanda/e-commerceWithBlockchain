@@ -23,11 +23,13 @@ export default function Home() {
         const User = tabAccounts.find((x: { compte: any; }) => x.compte.toLowerCase() == comptes[0].toLowerCase());
 
         setLoad(false)
-
-        if (User?.role === "admin") {
-          window.location.href = "/dashbord"
-        }
-        else {
+        if (User) {
+          if (User.role === "admin") {
+            window.location.href = "/dashbord"
+          } else {
+            window.location.href = "/commandes"
+          }
+        } else {
           window.location.href = "/commandes"
         }
       } catch (err) {
@@ -59,8 +61,8 @@ export default function Home() {
     initBlockchain();
   }, []);
 
-  const handleAddToCart = (produit: { id: any; name: any; category: any; price: any; image:any; }) => {
-    addToCart({ id: produit.id, name: produit.name, category: produit.category, price: produit.price, photo:produit.image })
+  const handleAddToCart = (produit: { id: any; name: any; category: any; price: any; image: any; }) => {
+    addToCart({ id: produit.id, name: produit.name, category: produit.category, price: produit.price, photo: produit.image })
     toast.success(`"${produit.name}" a été ajouté au panier.`, {
       position: 'bottom-right',
     });
@@ -124,7 +126,7 @@ export default function Home() {
         </div>
         <div className='grid gap-4 grid-cols-2 mt-12 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'>
           {
-            produits.slice(1).map((produit: any, index) => (  
+            produits?.slice(1).map((produit: any, index) => (
               <div className='shadow-xl rounded-md' key={index}>
                 <div className='overflow-hidden max-h-[200px]'>
                   <button className='text-white p-1.5 absolute z-10 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 ml-2 mt-2' onClick={() => handleAddToCart(produit)}>
