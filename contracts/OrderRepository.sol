@@ -76,6 +76,10 @@ contract OrderRepository {
         nextId++;
     }
 
+    function getContractBalance() public view returns (uint) {
+        return address(this).balance;
+    }
+
     function getOrderById(uint _id) public view returns (Order memory) {
         return orders[_id];
     }

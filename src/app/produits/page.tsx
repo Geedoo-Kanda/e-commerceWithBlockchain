@@ -25,12 +25,12 @@ export default function Produits() {
         };
         initBlockchain();
     }, []);
-    const handleAddToCart = (produit: { id: any; name: any; category: any; price: any; image:any; }) => {
-        addToCart({ id: produit.id, name: produit.name, category: produit.category, price: produit.price, photo:produit.image })
+    const handleAddToCart = (produit: { id: any; name: any; category: any; price: any; image: any; }) => {
+        addToCart({ id: produit.id, name: produit.name, category: produit.category, price: produit.price, photo: produit.image })
         toast.success(`"${produit.name}" a été ajouté au panier.`, {
-          position: 'bottom-right',
+            position: 'bottom-right',
         });
-      };
+    };
     return (
         <main className="min-h-screen pt-28">
 

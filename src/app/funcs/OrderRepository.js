@@ -68,6 +68,12 @@ const listAllOrders = async (contract) => {
     }
 };
 
+const balance = async (contract) => {
+    if (contract) {
+        return contract.methods.getContractBalance().call();
+    }
+};
+
 export {
     initOrderWeb3,
     initOrderContract,
@@ -75,4 +81,5 @@ export {
     placeNewOrder,
     getOrderById,
     listAllOrders,
+    balance
 };

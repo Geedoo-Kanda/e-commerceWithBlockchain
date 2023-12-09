@@ -1,7 +1,7 @@
 import Web3 from 'web3';
-import DeliveryRepositoryContract from './build/contracts/DeliveryRepository.json';
+import DeliveryRepositoryContract from '../../../build/contracts/DeliveryRepository.json';
 
-const initWeb3 = async () => {
+const initDeliveryWeb3 = async () => {
     if (window.ethereum) {
         const web3Instance = new Web3(window.ethereum);
         try {
@@ -17,7 +17,7 @@ const initWeb3 = async () => {
     }
 };
 
-const initContract = async (web3) => {
+const initDeliveryContract = async (web3) => {
     if (web3) {
         const networkId = await web3.eth.net.getId();
         const deployedNetwork = DeliveryRepositoryContract.networks[networkId];
@@ -28,7 +28,7 @@ const initContract = async (web3) => {
     }
 };
 
-const initAccounts = async (web3) => {
+const initDeliveryAccounts = async (web3) => {
     if (web3) {
         return web3.eth.getAccounts();
     }
@@ -58,9 +58,9 @@ const listAllDeliveries = async (contract) => {
 };
 
 export {
-    initWeb3,
-    initContract,
-    initAccounts,
+    initDeliveryWeb3,
+    initDeliveryContract,
+    initDeliveryAccounts,
     makeNewDelivery,
     getDeliveryById,
     listAllDeliveries,

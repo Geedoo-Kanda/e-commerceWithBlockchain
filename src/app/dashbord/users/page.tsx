@@ -1,6 +1,34 @@
-import Image from 'next/image'
+"use client"
+
+
+import { initUserWeb3, initUserContract, initUserAccounts, listAllUsers } from '../../funcs/UserRepository';
+import { useState, useEffect } from 'react';
+
 
 export default function AdminUsers() {
+    const [userProfile, setUserProfile] = useState<any>();
+
+    useEffect(() => {
+        const initBlockchain = async () => {
+
+            const accounts = await window.ethereum.request({
+                method: 'eth_requestAccounts',
+            });
+            if (accounts.length > 0) {
+                const web3UserInstance = await initUserWeb3();
+                const contractUserInstance = await initUserContract(web3UserInstance);
+                const accountsListUser = await initUserAccounts(web3UserInstance);
+
+                const tabAccounts = await listAllUsers(contractUserInstance);
+                setUserProfile(tabAccounts);
+
+            } else {
+                window.location.href = "/"
+            }
+
+        };
+        initBlockchain();
+    }, []);
     return (
         <main className="min-h-screen mt-5">
             <div className="overflow-x-auto mt-3">
@@ -27,37 +55,40 @@ export default function AdminUsers() {
                                     <th scope="col" className="px-3 py-2 text-sm text-center text-white font-bold">
                                         Adresse
                                     </th>
-                                   
+
                                     <th scope="col" className="px-3 py-2 text-sm text-center text-white font-bold">
                                         Biographie
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                <tr>
-                                    <td className="py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap text-center">
-                                        1
-                                    </td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">
-                                        12/11/2019
-                                    </td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap uppercase font-semibold text-center">
-                                       Geedoo Kanda
-                                    </td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">
-                                        <div>
-                                            email@email.com
-                                        </div>
-                                        <div>
-                                            +243 972062655
-                                        </div>
-                                    </td>
-                                    
-                                     <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">245 avenue noiki, kinshasa gombe</td>
-                                    <td className="py-2 px-3 text-sm text-gray-700 max-w-[300px] text-center">Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex quod et nulla dolorum voluptatem vero. Nam quod aliquam dolores ipsum nostrum vel. Soluta ut nobis, itaque rem cum placeat tenetur.</td>
+                                {
+                                    userProfile?.slice(1).map((user: any, index: any) => (
+                                        <tr key={index}>
+                                            <td className="py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap text-center">
+                                                {index + 1}
+                                            </td>
+                                            <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">
+                                                12/11/2019
+                                            </td>
+                                            <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap uppercase font-semibold text-center">
+                                                {user.nom} {user.prenom} {user.postnom}
+                                            </td>
+                                            <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">
+                                                <div>
+                                                  {user.email}
+                                                </div>
+                                                <div>
+                                                    {user.telephone}
+                                                </div>
+                                            </td>
 
-                                </tr>
+                                            <td className="py-2 px-3 text-sm text-gray-700 whitespace-nowrap text-center">{user.adresse}</td>
+                                            <td className="py-2 px-3 text-sm text-gray-700 max-w-[300px] text-center">{user.biographie}</td>
 
+                                        </tr>
+                                    ))
+                                }
                             </tbody>
                         </table>
                     </div>
