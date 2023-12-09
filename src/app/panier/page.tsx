@@ -9,7 +9,7 @@ import { initOrderWeb3, initOrderContract, initOrderAccounts, placeNewOrder } fr
 
 export default function Panier() {
 
-    const { getCart, addToCart, getTotal, clearCart } = useCart();
+    const { getCart, addToCart, getTotal, clearCart, removeFromCart } = useCart();
     const cart = getCart();
     const total = getTotal();
 
@@ -87,8 +87,16 @@ export default function Panier() {
             <section className='container px-8 md:px-0 md:mx-auto'>
                 <div className='grid gap-4 md:grid-cols-2'>
                     <div className="bg-white p-5">
-                        <div className='text-gray-700 font-semibold text-2xl'>
-                            Votre Panier
+                        <div className="flex justify-between">
+                            <div className='text-gray-700 font-semibold text-2xl'>
+                                Votre Panier
+                            </div>
+                            <div>
+                                <div className="flex text-xs items-center bg-red-500 text-white p-1 rounded-md cursor-pointer" onClick={() => clearCart()}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21V6H4V4h5V3h6v1h5v2h-1v15H5Zm2-2h10V6H7v13Zm2-2h2V8H9v9Zm4 0h2V8h-2v9ZM7 6v13V6Z" /></svg>
+                                    Vider le panier
+                                </div>
+                            </div>
                         </div>
                         <div className='grid grid-cols-1 space-y-1 p-5 shadow-lg bg-gray-50'>
                             {
@@ -98,7 +106,7 @@ export default function Panier() {
                                             <div className="md:col-span-2 col-span-3">
                                                 <img src={item.product.photo} alt="" className='w-full h-auto' />
                                             </div>
-                                            <div className="col-span-7 md:col-span-8 grid grid-cols-3 pl-4">
+                                            <div className="col-span-6 md:col-span-7 grid grid-cols-3 pl-4">
                                                 <div className="col-span-2">
                                                     <small className="text-[10px] text-gray-500">Nom</small>
                                                     <div className="-mt-1">
@@ -113,6 +121,11 @@ export default function Panier() {
                                             </div>
                                             <div className="col-span-2 text-3xl flex items-center justify-center text-gray-800 font-semibold">
                                                 {item.product.price.toString()} <small className='text-xs ml-1 text-gray-500'>$</small>
+                                            </div>
+                                            <div className="col-span-1  flex items-center justify-center">
+                                                <div className="flex text-xs items-center bg-red-500 text-white p-1 rounded-md cursor-pointer" onClick={() => removeFromCart(item.product.id)}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21V6H4V4h5V3h6v1h5v2h-1v15H5Zm2-2h10V6H7v13Zm2-2h2V8H9v9Zm4 0h2V8h-2v9ZM7 6v13V6Z" /></svg>
+                                                </div>
                                             </div>
                                         </div>
                                     )) :

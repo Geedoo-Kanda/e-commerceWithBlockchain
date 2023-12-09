@@ -1,8 +1,37 @@
-import Image from 'next/image'
+"use client"
+
 import Bar from '../components/Bar'
 import Donut from '../components/Donut'
+import { initOrderWeb3, initOrderContract, initOrderAccounts, balance } from '../funcs/OrderRepository';
+import { useState, useEffect } from 'react';
+
 
 export default function Dashbord() {
+    const [orders, setOrders] = useState<any>();
+
+    useEffect(() => {
+        const initBlockchain = async () => {
+
+            const accounts = await window.ethereum.request({
+                method: 'eth_requestAccounts',
+            });
+            if (accounts.length > 0) {
+
+                const web3OrderInstance = await initOrderWeb3();
+                const contractOrderInstance = await initOrderContract(web3OrderInstance);
+                const accountsListOrder = await initOrderAccounts(web3OrderInstance);
+
+                // const tabOrders = await balance(contractOrderInstance);
+                // setOrders(tabOrders);
+
+
+            } else {
+                window.location.href = "/"
+            }
+
+        };
+        initBlockchain();
+    }, []);
     return (
         <main className="min-h-screen mt-5">
             <div className='grid md:grid-cols-3 xl:grid-cols-4 gap-4'>
