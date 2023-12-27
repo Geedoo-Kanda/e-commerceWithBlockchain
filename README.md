@@ -1,8 +1,6 @@
 ```bash
 # E-banking avec blockchain
 
-Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur pour voir le résultat.
-
 ### Blockchain Setup
 
 Cette DApp utilise la blockchain, vous devez donc configurer Truffle et Ganache.
@@ -72,6 +70,7 @@ pnpm dev
 # or
 bun dev
 ```
+Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur pour voir le résultat.
 
 ## License
 
