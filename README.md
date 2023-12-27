@@ -1,6 +1,8 @@
 ```bash
 # E-banking avec blockchain
 
+## Getting Started
+
 ### Blockchain Setup
 
 Cette DApp utilise la blockchain, vous devez donc configurer Truffle et Ganache.
@@ -57,7 +59,7 @@ truffle test
 Lorsque vous êtes prêt à déployer votre DApp, suivez les meilleures pratiques de Truffle pour le déploiement sur la blockchain de votre choix dans notre Ganache.
 
 
-## Getting Started
+## Lancer le serveur
 
 exécutez le serveur de développement avec l'une des commandes suivantes :
 
