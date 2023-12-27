@@ -1,20 +1,6 @@
 ```bash
 # E-banking avec blockchain
 
-## Getting Started
-
-Pour commencer, exécutez le serveur de développement avec l'une des commandes suivantes :
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
 Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur pour voir le résultat.
 
 ### Blockchain Setup
@@ -70,11 +56,22 @@ truffle test
 
 ## Deployment
 
-Lorsque vous êtes prêt à déployer votre DApp, suivez les meilleures pratiques de Truffle pour le déploiement sur la blockchain de votre choix.
+Lorsque vous êtes prêt à déployer votre DApp, suivez les meilleures pratiques de Truffle pour le déploiement sur la blockchain de votre choix dans notre Ganache.
 
-## Contributing
 
-Si vous souhaitez contribuer à ce projet, veuillez consulter le guide de contribution.
+## Getting Started
+
+exécutez le serveur de développement avec l'une des commandes suivantes :
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
 ## License
 
